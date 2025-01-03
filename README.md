@@ -13,31 +13,6 @@ plaintext
 Copy code
 project-repo/
 
-│
-├── app/                   # Contains the Flask application files
-│   └── main.py            # Main entry point for the Flask app
-│
-├── bot/                   # Contains Telegram bot-related files
-│   └── bot.py             # Main Telegram bot script
-│
-├── config/                # Configuration and settings files
-│   └── config.json        # JSON file for storing credentials and settings
-│
-├── logs/                  # Stores log files
-│   └── app.log            # Application log file
-│
-├── prompts/               # Custom prompt files
-│   └── default_prompts.json # Default prompts in JSON format
-│
-├── requirements/          # Dependency files
-│   └── requirements.txt   # Python dependencies
-│
-├── tests/                 # Test scripts for the project
-│   └── test_app.py        # Test cases for the Flask app
-│   └── test_bot.py        # Test cases for the Telegram bot
-│
-└── README.md              # Documentation for the project
-
 Prerequisites
 Python 3.8 or higher.
 Twilio account with verified credentials.
