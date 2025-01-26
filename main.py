@@ -9,6 +9,7 @@ from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import phonenumbers
 import asyncio
+from getpass import getpass
 from concurrent.futures import ThreadPoolExecutor
 
 # Initialize Flask app for webhook
@@ -23,36 +24,18 @@ CONFIG_FILE = "config.json"
 
 # Load or initialize configuration
 def load_config():
-    try:
-        with open(CONFIG_FILE, "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {
-            "TWILIO_SID": "",
-            "TWILIO_AUTH_TOKEN": "",
-            "TWILIO_PHONE_NUMBER": "",
-            "TELEGRAM_BOT_TOKEN": "",
-            "CALLBACK_URL": "http://your-callback-url",
-            "otp_length": 6,
-            "language": "en",
-            "ai_enabled": False,
-            "log_level": "INFO",
-            "call_timeout": 30,
-            "retry_attempts": 3,
-            "schedule_enabled": False,
-            "ai_prompt": "Please enter the OTP you have received.",
-            "company_name": "Default Company",
-            "spoof_number": "",
-            "prompts": {}  # Store prompts here
-        }
-    except json.JSONDecodeError:
-        logger.error("Invalid configuration file format. Resetting to defaults.")
-        return {}
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r") as file:
+                return json.load(file)
+        except json.JSONDecodeError:
+            logger.error("Invalid configuration file format. Resetting to defaults.")
+    return {}
 
 # Save updated configuration to file
-def save_config(new_config):
+def save_config(config_data):
     with open(CONFIG_FILE, "w") as file:
-        json.dump(new_config, file)
+        json.dump(config_data, file, indent=4)
 
 # Validate phone number format using phonenumbers library
 def validate_phone_number(number):
@@ -138,20 +121,55 @@ def reset_to_defaults():
     config.clear()
     config.update(load_config())
 
+# Function to configure user details interactively
+def configure_details():
+    config_data = {}
+
+    # Collect necessary details
+    print("Please enter the following details:")
+
+    config_data["TWILIO_SID"] = input("Enter your Twilio SID: ").strip()
+    config_data["TWILIO_AUTH_TOKEN"] = getpass("Enter your Twilio Auth Token: ").strip()
+    config_data["TWILIO_PHONE_NUMBER"] = input("Enter your Twilio phone number (e.g., +1234567890): ").strip()
+    config_data["TELEGRAM_BOT_TOKEN"] = getpass("Enter your Telegram bot token: ").strip()
+    config_data["CALLBACK_URL"] = input("Enter your callback URL (e.g., http://your-callback-url): ").strip()
+    config_data["otp_length"] = int(input("Enter the OTP length (e.g., 6): ").strip())
+    config_data["language"] = input("Enter the language (default: en): ").strip() or "en"
+    config_data["ai_enabled"] = input("Enable AI? (yes/no): ").strip().lower() == "yes"
+    config_data["log_level"] = input("Enter log level (default: INFO): ").strip() or "INFO"
+    config_data["call_timeout"] = int(input("Enter call timeout (default: 30): ").strip() or 30)
+    config_data["retry_attempts"] = int(input("Enter retry attempts (default: 3): ").strip() or 3)
+    config_data["schedule_enabled"] = input("Enable scheduling? (yes/no): ").strip().lower() == "yes"
+    config_data["ai_prompt"] = input("Enter AI prompt message (default: Please enter the OTP you have received.): ").strip() or "Please enter the OTP you have received."
+    config_data["company_name"] = input("Enter the company name (default: Default Company): ").strip() or "Default Company"
+    config_data["spoof_number"] = input("Enter the spoof number (optional): ").strip() or ""
+    config_data["prompts"] = {}
+
+    # Save the config
+    save_config(config_data)
+    print("Configuration saved successfully!")
+
 # Function to start the Telegram bot
 def start_bot():
     application = ApplicationBuilder().token(config["TELEGRAM_BOT_TOKEN"]).build()
     application.add_handler(CommandHandler("custom", custom_command))
     application.run_polling()
 
-# Load the configuration
-config = load_config()
+# Main function to run the script
+def main():
+    # Load configuration or run the interactive configuration
+    global config
+    config = load_config()
 
-# Start the bot and Flask application in separate threads
-if __name__ == "__main__":
+    if not config:
+        print("No configuration found. Please configure the details.")
+        configure_details()
+
     # Start Flask app in a separate thread
     threading.Thread(target=lambda: app.run(host="0.0.0.0", port=5000)).start()
 
     # Start the Telegram bot
     start_bot()
 
+if __name__ == "__main__":
+    main()
