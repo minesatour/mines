@@ -1,0 +1,30 @@
+# Python bytecode
+*.pyc
+*.pyo
+__pycache__/
+
+# Flask environment variables
+instance/
+
+# Virtual environments
+venv/
+env/
+*.env
+
+# Configuration files with sensitive data
+config.json
+
+# Logs
+*.log
+
+# .DS_Store (macOS specific)
+.DS_Store
+
+# IntelliJ IDEA
+.idea/
+
+# VS Code settings
+.vscode/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
